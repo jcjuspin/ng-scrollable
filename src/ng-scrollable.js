@@ -36,7 +36,7 @@ angular.module('ngScrollable', [])
   '$timeout',
   '$parse',
 
-  function ($document, $window, $timeout, $parse) {
+  function ($document, $window, $timeout, $parse, $rootScope) {
     'use strict';
 
     var defaultOpts = {
@@ -168,9 +168,11 @@ angular.module('ngScrollable', [])
 
           // update external scroll spies
           if (setter.spyX) {
+            $scope.$emit('scroll:horizontal', {value:contentLeft});
             setter.spyX($scope, contentLeft);
           }
           if (setter.spyY) {
+            $scope.$emit('scroll:vertical', {value:contentTop});
             setter.spyY($scope, contentTop);
           }
         },
