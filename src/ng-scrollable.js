@@ -374,7 +374,9 @@ angular.module('ngScrollable', [])
           refresh();
 
           // prevent default scrolling
-          stop(e, true);
+          if(contentTop != 0 && contentTop != (contentHeight - containerHeight)) {
+            stop(e, true);
+          }
         };
 
         // watch and set spy attribute value expressions
