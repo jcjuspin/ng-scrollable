@@ -55,6 +55,9 @@ angular.module('ngScrollable', [])
       restrict: 'A',
       replace: true,
       transclude: true,
+      scope: {
+        scrollableElements: '='
+      },
       template: "<div class=\"scrollable\"><div class=\"scrollable-content\" ng-transclude></div><div class='scrollable-bar scrollable-bar-x'><div class='scrollable-slider'></div></div><div class='scrollable-bar scrollable-bar-y'><div class='scrollable-slider'></div></div></div>",
       link: function ($scope, element, attrs) {
         var
@@ -88,6 +91,8 @@ angular.module('ngScrollable', [])
         hovered = false,
         activeTimeout,
         setter = {},
+        initX = true,
+        initY = true,
 
         toPix = function (v) { return v.toFixed(3) + 'px'; },
         clamp = function (val, min, max) {
@@ -159,29 +164,43 @@ angular.module('ngScrollable', [])
           }
           dom.barY.css(scrollbarYStyles);
         },
-        scrollTo = function (left, top) {
+        scrollTo = function (left, top, axis, stop) {
           // clamp to 0 .. content{Height|Width} - container{Height|Width}
           contentTop = clamp(top, 0, contentHeight - containerHeight);
           contentLeft = clamp(left, 0, contentWidth - containerWidth);
           var t = 'translate(' + toPix(-contentLeft) + ',' + toPix(-contentTop) + ')';
-          dom.content.css({ transform: t, '-webkit-transform': t });
+          dom.content.css({ transform: t, '-webkit-transform': t, 'transition': 'none' });
 
           // update external scroll spies
           if (setter.spyX) {
-            $scope.$emit('scroll:horizontal', {value:contentLeft});
             setter.spyX($scope, contentLeft);
           }
           if (setter.spyY) {
-            $scope.$emit('scroll:vertical', {value:contentTop});
             setter.spyY($scope, contentTop);
           }
+          if ($scope.scrollableElements && !stop) {
+            if (axis === 'x') {
+              if (attrs.scrollElem === 'scrollable:elem:x' && $scope.scrollableElements['scrollable:elem:both'])
+                $scope.scrollableElements['scrollable:elem:both'].scrollX(left, true);
+              else if (attrs.scrollElem === 'scrollable:elem:both' && $scope.scrollableElements['scrollable:elem:x'])
+                $scope.scrollableElements['scrollable:elem:x'].scrollX(left, true);
+            }
+            else if (axis === 'y') {
+              if (attrs.scrollElem === 'scrollable:elem:y' && $scope.scrollableElements['scrollable:elem:both'])
+                $scope.scrollableElements['scrollable:elem:both'].scrollY(top, true);
+              else if (attrs.scrollElem === 'scrollable:elem:both' && $scope.scrollableElements['scrollable:elem:y'])
+                $scope.scrollableElements['scrollable:elem:y'].scrollY(top, true);
+            }
+          }
         },
-        scrollX = function (pos) {
-          scrollTo(pos, contentTop);
+        scrollX = function (pos, stop) {
+          stop = stop ? stop : false
+          scrollTo(pos, contentTop, 'x', stop);
           updateSliderX();
         },
-        scrollY = function (pos) {
-          scrollTo(contentLeft, pos);
+        scrollY = function (pos, stop) {
+          stop = stop ? stop : false
+          scrollTo(contentLeft, pos, 'y', stop);
           updateSliderY();
         },
         refresh = function () {
@@ -197,7 +216,7 @@ angular.module('ngScrollable', [])
           }
           else {
             isXActive = false;
-            scrollX(0);
+            scrollX(0, true);
           }
 
           if (config.scrollY !== 'none' && containerHeight + config.scrollYSlackSpace < contentHeight) {
@@ -205,7 +224,7 @@ angular.module('ngScrollable', [])
           }
           else {
             isYActive = false;
-            scrollY(0);
+            scrollY(0, true);
           }
 
           // update UI
@@ -374,7 +393,9 @@ angular.module('ngScrollable', [])
           refresh();
 
           // prevent default scrolling
-          stop(e, true);
+          if(contentTop != 0 && contentTop != (contentHeight - containerHeight)) {
+            stop(e, true);
+          }
         };
 
         // watch and set spy attribute value expressions
@@ -396,6 +417,20 @@ angular.module('ngScrollable', [])
           }
         });
 
+        if ($scope.scrollableElements) {
+          $scope.scrollableElements[attrs.scrollElem] = {scrollX:scrollX, scrollY:scrollY};
+          if (initX) {
+            console.log('init X');
+            scrollX(0);
+            refresh();
+          }
+          if (initY) {
+            console.log('init Y');
+            scrollY(0);
+            refresh();
+          }
+        }
+
         // init
         refresh();
 
@@ -414,22 +449,22 @@ angular.module('ngScrollable', [])
         // may be broadcast from outside to scroll to content edges
         $scope.$on('scrollable.scroll.left', function () {
           // defer to next digest
-          $timeout(function () { scrollX(0); });
+          $timeout(function () { scrollX(0, true); });
         });
 
         $scope.$on('scrollable.scroll.right', function () {
           // defer to next digest
-          $timeout(function () { scrollX(contentWidth); });
+          $timeout(function () { scrollX(contentWidth, true); });
         });
 
         $scope.$on('scrollable.scroll.top', function () {
           // defer to next digest
-          $timeout(function () { scrollY(0); });
+          $timeout(function () { scrollY(0, true); });
         });
 
         $scope.$on('scrollable.scroll.bottom', function () {
           // defer to next digest
-          $timeout(function () { scrollY(contentHeight); });
+          $timeout(function () { scrollY(contentHeight, true); });
         });
 
         // bind DOM element handlers
