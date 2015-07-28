@@ -2,12 +2,12 @@
   "author": "Alexander Eichhorn <alex@kidtsunami.com>",
   "name": "ngScrollable",
   "description": "Superamazing scrollbars for AngularJS",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT License",
   "homepage": "",
   "repository": {
     "type": "git",
-    "url": "http://github.com/echa/ng-scrollable.git"
+    "url": "http://github.com/saintmac/ng-scrollable.git"
   },
   "bugs": {
     "url" : "http://github.com/echa/ng-scrollable/issues"
