@@ -35,6 +35,7 @@ angular.module('ngScrollable', [])
   '$window',
   '$timeout',
   '$parse',
+  '$rootScope',
 
   function ($document, $window, $timeout, $parse, $rootScope) {
     'use strict';
@@ -91,8 +92,6 @@ angular.module('ngScrollable', [])
         hovered = false,
         activeTimeout,
         setter = {},
-        initX = true,
-        initY = true,
 
         toPix = function (v) { return v.toFixed(3) + 'px'; },
         clamp = function (val, min, max) {
@@ -417,18 +416,17 @@ angular.module('ngScrollable', [])
           }
         });
 
+        // Activating the scroll
+        $timeout(function() {
+          isXScrolling = true;
+          isYScrolling = true;
+          refresh();
+          isXScrolling = false;
+          isYScrolling = false;
+        }, 0);
+
         if ($scope.scrollableElements) {
           $scope.scrollableElements[attrs.scrollElem] = {scrollX:scrollX, scrollY:scrollY};
-          if (initX) {
-            console.log('init X');
-            scrollX(0);
-            refresh();
-          }
-          if (initY) {
-            console.log('init Y');
-            scrollY(0);
-            refresh();
-          }
         }
 
         // init
