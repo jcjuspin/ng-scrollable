@@ -168,7 +168,10 @@ angular.module('ngScrollable', [])
           contentTop = clamp(top, 0, contentHeight - containerHeight);
           contentLeft = clamp(left, 0, contentWidth - containerWidth);
           var t = 'translate(' + toPix(-contentLeft) + ',' + toPix(-contentTop) + ')';
-          dom.content.css({ transform: t, '-webkit-transform': t, 'transition': 'none' });
+
+          var transformCss = {transform: t, '-webkit-transform': t};
+          if (config.transition) transformCss.transition = config.transition;
+          dom.content.css(transformCss);
 
           // update external scroll spies
           if (setter.spyX) {
